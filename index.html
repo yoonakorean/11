@@ -76,6 +76,717 @@
 
   <script>
     const listeningUnits = [
+      "0-1 單字聽力挑戰",
+      "0-2 單字聽力挑戰",
+      "0-3 單字聽力挑戰",
+      "0-4 單字聽力挑戰",
+      "0-5 單字聽力挑戰",
+      "0-6 單字聽力挑戰",
+      "0-7 單字聽力挑戰",
+      "0-8 單字聽力挑戰",
+      "0-9 單字聽力挑戰",
+      "0-10 單字聽力挑戰",
+      "0-11 單字聽力挑戰",
+    ];
+
+    const dictationUnits = [
+      "0-1 單字聽打挑戰",
+      "0-2 單字聽打挑戰",
+      "0-3 單字聽打挑戰",
+      "0-4 單字聽打挑戰",
+      "0-5 單字聽打挑戰",
+      "0-6 單字聽打挑戰",
+      "0-7 單字聽打挑戰",
+      "0-8 單字聽打挑戰",
+      "0-9 單字聽打挑戰",
+      "0-10 單字聽打挑戰",
+      "0-11 單字聽打挑戰",
+    ];
+
+    const meaningUnits = [
+      "                 ",  // 空白
+      "0-2 單字聽音辨義挑戰",
+      "0-3 單字聽音辨義挑戰",
+      "0-4 單字聽音辨義挑戰",
+      "0-5 單字聽音辨義挑戰",
+      "0-6 單字聽音辨義挑戰",
+      "0-7 單字聽音辨義挑戰",
+      "0-8 單字聽音辨義挑戰",
+      "0-9 單字聽音辨義挑戰",
+      "0-10 單字聽音辨義挑戰",
+      "0-11 單字聽音辨義挑戰",
+    ];
+
+    function getUnitLink(unitName) {
+      if (unitName.includes("單字聽力挑戰")) {
+        const id = unitName.split(" ")[0];
+        return `listening/${id}.html`;
+      } else if (unitName.includes("單字聽打挑戰")) {
+        const id = unitName.split(" ")[0];
+        return `dictation/${id}.html`;
+      } else if (unitName.includes("單字聽音辨義挑戰")) {
+        const id = unitName.split(" ")[0];
+        return `meaning/${id}.html`;
+      }
+      return "#";
+    }
+
+    const allUnitsGrouped = [];
+    for (let i = 0; i < listeningUnits.length; i++) {
+      allUnitsGrouped.push([meaningUnits[i], listeningUnits[i], dictationUnits[i]]);
+    }
+
+    async function queryScores() {
+      const nickname = document.getElementById("nicknameInput").value.trim();
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "查詢中，請稍候...";
+      if (!nickname) {
+        resultDiv.innerHTML = '<p style="color:red;">請輸入姓名！</p>';
+        return;
+      }
+      try {
+        const apiUrl = "https://api.sheetbest.com/sheets/6609511a-f588-4e4f-bd2b-ed551cab8770";
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+
+        const userRecords = data.filter(row => row.nickname && row.nickname.toLowerCase() === nickname.toLowerCase());
+
+        const latestScores = {};
+        userRecords.forEach(record => {
+          const unit = record.gametitle || "未分類";
+          const timestamp = new Date(record["時間戳記"]);
+          if (!latestScores[unit] || timestamp > latestScores[unit].timestamp) {
+            latestScores[unit] = {
+              score: Number(record.score),
+              timestamp
+            };
+          }
+        });
+
+        let html = `<h2>${nickname} 的成績概覽</h2>`;
+        html += `<table>
+          <thead>
+            <tr>
+              <th>單字聽音辨義挑戰</th>
+              <th>單字聽力挑戰</th>
+              <th>單字聽打挑戰</th>
+            </tr>
+          </thead>
+          <tbody>
+        `;
+
+        allUnitsGrouped.forEach(rowUnits => {
+          html += "<tr>";
+          rowUnits.forEach(unit => {
+            if (unit.trim() === "") {
+              html += `<td></td>`;
+            } else {
+              const link = getUnitLink(unit);
+              if (latestScores[unit]) {
+                const score = latestScores[unit].score;
+                const pass = score >= 80;
+                html += `<td class="${pass ? 'pass' : 'fail'}"><a href="${link}" target="_blank">${unit}</a><br>${score} 分<br>${pass ? '✅ 合格' : '❌ 不合格'}</td>`;
+              } else {
+                html += `<td class="not-tested"><a href="${link}" target="_blank">${unit}</a><br>尚未挑戰</td>`;
+              }
+            }
+          });
+          html += "</tr>";
+        });
+
+        html += `</tbody></table>`;
+        resultDiv.innerHTML = html;
+      } catch (err) {
+        resultDiv.innerHTML = `<p style="color:red;">發生錯誤，請稍後再試。</p>`;
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
+
+聊天歷程紀錄
+
+你說：
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>學習成績查詢</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 800px;
+      margin: 30px auto;
+      text-align: center;
+    }
+    #logo {
+      width: 150px;
+      max-width: 80%;
+      margin-bottom: 10px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      width: 80%;
+      max-width: 400px;
+      margin: 10px auto;
+      display: block;
+      text-align: center;
+    }
+    #result {
+      margin-top: 20px;
+      text-align: center;
+    }
+    table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 780px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .pass {
+      color: green;
+      font-weight: bold;
+    }
+    .fail {
+      color: red;
+      font-weight: bold;
+    }
+    .not-tested {
+      color: gray;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <img src="logo.png" alt="Logo" id="logo" />
+  <h1>學習成績查詢</h1>
+  <input id="nicknameInput" type="text" placeholder="請輸入您的姓名" />
+  <button onclick="queryScores()">查詢成績</button>
+  <div id="result"></div>
+
+  <script>
+    // 三組單元名稱，各11個
+    const listeningUnits = [
+      "0-1 單字聽力測驗",
+      "0-2 單字聽力測驗",
+      "0-3 單字聽力測驗",
+      "0-4 單字聽力測驗",
+      "0-5 單字聽力測驗",
+      "0-6 單字聽力測驗",
+      "0-7 單字聽力測驗",
+      "0-8 單字聽力測驗",
+      "0-9 單字聽力測驗",
+      "0-10 單字聽力測驗",
+      "0-11 單字聽力測驗",
+    ];
+
+    const dictationUnits = [
+      "0-1 單字聽打測驗",
+      "0-2 單字聽打測驗",
+      "0-3 單字聽打測驗",
+      "0-4 單字聽打測驗",
+      "0-5 單字聽打測驗",
+      "0-6 單字聽打測驗",
+      "0-7 單字聽打測驗",
+      "0-8 單字聽打測驗",
+      "0-9 單字聽打測驗",
+      "0-10 單字聽打測驗",
+      "0-11 單字聽打測驗",
+    ];
+
+    const meaningUnits = [
+      "                 ",  // 這格會空白不顯示內容
+      "0-2 單字聽音辨義測驗",
+      "0-3 單字聽音辨義測驗",
+      "0-4 單字聽音辨義測驗",
+      "0-5 單字聽音辨義測驗",
+      "0-6 單字聽音辨義測驗",
+      "0-7 單字聽音辨義測驗",
+      "0-8 單字聽音辨義測驗",
+      "0-9 單字聽音辨義測驗",
+      "0-10 單字聽音辨義測驗",
+      "0-11 單字聽音辨義測驗",
+    ];
+
+    // 把三組合成一個二維陣列，每列對應三種測驗同一編號
+    const allUnitsGrouped = [];
+    for(let i=0; i<listeningUnits.length; i++) {
+      allUnitsGrouped.push([listeningUnits[i], dictationUnits[i], meaningUnits[i]]);
+    }
+
+    async function queryScores() {
+      const nickname = document.getElementById("nicknameInput").value.trim();
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "查詢中，請稍候...";
+      if (!nickname) {
+        resultDiv.innerHTML = '<p style="color:red;">請輸入姓名！</p>';
+        return;
+      }
+      try {
+        const apiUrl = "https://api.sheetbest.com/sheets/6609511a-f588-4e4f-bd2b-ed551cab8770";
+
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+
+        // 篩選該暱稱的所有成績，忽略大小寫比對
+        const userRecords = data.filter(row => row.nickname && row.nickname.toLowerCase() === nickname.toLowerCase());
+
+        // 以單元名稱為 key，存最新成績（取最新時間）
+        const latestScores = {};
+        userRecords.forEach(record => {
+          const unit = record.gametitle || "未分類";
+          const timestamp = new Date(record["時間戳記"]);
+          if (!latestScores[unit] || timestamp > latestScores[unit].timestamp) {
+            latestScores[unit] = {
+              score: Number(record.score),
+              timestamp
+            };
+          }
+        });
+
+        // 生成三欄表格：左欄 聽力測驗，中 聽打測驗，右 聽音辨義測驗
+        let html = <h2>${nickname} 的成績概覽</h2>;
+        html += <table>
+          <thead>
+            <tr>
+              <th>單字聽力測驗</th>
+              <th>單字聽打測驗</th>
+              <th>單字聽音辨義測驗</th>
+            </tr>
+          </thead>
+          <tbody>
+        ;
+
+        allUnitsGrouped.forEach(rowUnits => {
+          html += "<tr>";
+          rowUnits.forEach(unit => {
+            if (unit.trim() === "") {
+              // 這格空白，不顯示任何內容
+              html += <td></td>;
+            } else if (latestScores[unit]) {
+              const score = latestScores[unit].score;
+              const pass = score >= 80;
+              html += <td class="${pass ? 'pass' : 'fail'}">${unit}<br>${score} 分<br>${pass ? '✅ 合格' : '❌ 不合格'}</td>;
+            } else {
+              html += <td class="not-tested">${unit}<br>尚未測驗</td>;
+            }
+          });
+          html += "</tr>";
+        });
+
+        html += </tbody></table>;
+
+        resultDiv.innerHTML = html;
+      } catch (err) {
+        resultDiv.innerHTML = <p style="color:red;">發生錯誤，請稍後再試。</p>;
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
+
+幫我由左至右改成
+單字聽音辨義測驗 單字聽力測驗	單字聽打測驗	
+其他不變
+ChatGPT 說：
+你現在的表格欄位順序是：
+
+單字聽力測驗 | 單字聽打測驗 | 單字聽音辨義測驗
+要改成：
+
+單字聽音辨義測驗 | 單字聽力測驗 | 單字聽打測驗
+主要要改兩個地方：
+
+<thead> 標題的順序
+
+allUnitsGrouped 陣列 push 時的順序
+
+我幫你調整好：
+
+<script>
+  // 三組單元名稱，各11個
+  const listeningUnits = [
+    "0-1 單字聽力測驗",
+    "0-2 單字聽力測驗",
+    "0-3 單字聽力測驗",
+    "0-4 單字聽力測驗",
+    "0-5 單字聽力測驗",
+    "0-6 單字聽力測驗",
+    "0-7 單字聽力測驗",
+    "0-8 單字聽力測驗",
+    "0-9 單字聽力測驗",
+    "0-10 單字聽力測驗",
+    "0-11 單字聽力測驗",
+  ];
+
+  const dictationUnits = [
+    "0-1 單字聽打測驗",
+    "0-2 單字聽打測驗",
+    "0-3 單字聽打測驗",
+    "0-4 單字聽打測驗",
+    "0-5 單字聽打測驗",
+    "0-6 單字聽打測驗",
+    "0-7 單字聽打測驗",
+    "0-8 單字聽打測驗",
+    "0-9 單字聽打測驗",
+    "0-10 單字聽打測驗",
+    "0-11 單字聽打測驗",
+  ];
+
+  const meaningUnits = [
+    "                 ",  // 這格會空白不顯示內容
+    "0-2 單字聽音辨義測驗",
+    "0-3 單字聽音辨義測驗",
+    "0-4 單字聽音辨義測驗",
+    "0-5 單字聽音辨義測驗",
+    "0-6 單字聽音辨義測驗",
+    "0-7 單字聽音辨義測驗",
+    "0-8 單字聽音辨義測驗",
+    "0-9 單字聽音辨義測驗",
+    "0-10 單字聽音辨義測驗",
+    "0-11 單字聽音辨義測驗",
+  ];
+
+  // 調整 push 順序：聽音辨義 -> 聽力 -> 聽打
+  const allUnitsGrouped = [];
+  for (let i = 0; i < listeningUnits.length; i++) {
+    allUnitsGrouped.push([meaningUnits[i], listeningUnits[i], dictationUnits[i]]);
+  }
+
+  async function queryScores() {
+    const nickname = document.getElementById("nicknameInput").value.trim();
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = "查詢中，請稍候...";
+    if (!nickname) {
+      resultDiv.innerHTML = '<p style="color:red;">請輸入姓名！</p>';
+      return;
+    }
+    try {
+      const apiUrl = "https://api.sheetbest.com/sheets/6609511a-f588-4e4f-bd2b-ed551cab8770";
+
+      const res = await fetch(apiUrl);
+      const data = await res.json();
+
+      // 篩選該暱稱的所有成績
+      const userRecords = data.filter(row => row.nickname && row.nickname.toLowerCase() === nickname.toLowerCase());
+
+      const latestScores = {};
+      userRecords.forEach(record => {
+        const unit = record.gametitle || "未分類";
+        const timestamp = new Date(record["時間戳記"]);
+        if (!latestScores[unit] || timestamp > latestScores[unit].timestamp) {
+          latestScores[unit] = {
+            score: Number(record.score),
+            timestamp
+          };
+        }
+      });
+
+      // 生成新順序的表格
+      let html = `<h2>${nickname} 的成績概覽</h2>`;
+      html += `<table>
+        <thead>
+          <tr>
+            <th>單字聽音辨義測驗</th>
+            <th>單字聽力測驗</th>
+            <th>單字聽打測驗</th>
+          </tr>
+        </thead>
+        <tbody>
+      `;
+
+      allUnitsGrouped.forEach(rowUnits => {
+        html += "<tr>";
+        rowUnits.forEach(unit => {
+          if (unit.trim() === "") {
+            html += `<td></td>`;
+          } else if (latestScores[unit]) {
+            const score = latestScores[unit].score;
+            const pass = score >= 80;
+            html += `<td class="${pass ? 'pass' : 'fail'}">${unit}<br>${score} 分<br>${pass ? '✅ 合格' : '❌ 不合格'}</td>`;
+          } else {
+            html += `<td class="not-tested">${unit}<br>尚未測驗</td>`;
+          }
+        });
+        html += "</tr>";
+      });
+
+      html += `</tbody></table>`;
+      resultDiv.innerHTML = html;
+    } catch (err) {
+      resultDiv.innerHTML = `<p style="color:red;">發生錯誤，請稍後再試。</p>`;
+      console.error(err);
+    }
+  }
+</script>
+這樣就會變成 由左到右 是：
+聽音辨義 → 聽力 → 聽打，而且其他邏輯完全不變。
+
+你要我直接幫你把這段合併進你的原始完整 HTML 嗎？這樣你可以直接貼上就用。
+
+你說：
+可以幫我把個別的空格都加上該測驗的連結嗎
+ChatGPT 說：
+好，我幫你加上每個測驗單元的超連結。
+我假設你每個測驗的網址是固定規則，例如：
+
+聽音辨義測驗：meaning/0-2.html ~ meaning/0-11.html
+
+聽力測驗：listening/0-1.html ~ listening/0-11.html
+
+聽打測驗：dictation/0-1.html ~ dictation/0-11.html
+
+而且我會確保空白單元（像 0-1 聽音辨義）仍然空白。
+點擊成績表中的單元名稱，就會直接打開對應測驗。
+
+這是完整的改法（保留你原本的功能）：
+
+<script>
+  const listeningUnits = [
+    "0-1 單字聽力測驗",
+    "0-2 單字聽力測驗",
+    "0-3 單字聽力測驗",
+    "0-4 單字聽力測驗",
+    "0-5 單字聽力測驗",
+    "0-6 單字聽力測驗",
+    "0-7 單字聽力測驗",
+    "0-8 單字聽力測驗",
+    "0-9 單字聽力測驗",
+    "0-10 單字聽力測驗",
+    "0-11 單字聽力測驗",
+  ];
+
+  const dictationUnits = [
+    "0-1 單字聽打測驗",
+    "0-2 單字聽打測驗",
+    "0-3 單字聽打測驗",
+    "0-4 單字聽打測驗",
+    "0-5 單字聽打測驗",
+    "0-6 單字聽打測驗",
+    "0-7 單字聽打測驗",
+    "0-8 單字聽打測驗",
+    "0-9 單字聽打測驗",
+    "0-10 單字聽打測驗",
+    "0-11 單字聽打測驗",
+  ];
+
+  const meaningUnits = [
+    "                 ",  // 空白
+    "0-2 單字聽音辨義測驗",
+    "0-3 單字聽音辨義測驗",
+    "0-4 單字聽音辨義測驗",
+    "0-5 單字聽音辨義測驗",
+    "0-6 單字聽音辨義測驗",
+    "0-7 單字聽音辨義測驗",
+    "0-8 單字聽音辨義測驗",
+    "0-9 單字聽音辨義測驗",
+    "0-10 單字聽音辨義測驗",
+    "0-11 單字聽音辨義測驗",
+  ];
+
+  // 設定對應的 URL 規則
+  function getUnitLink(unitName) {
+    if (unitName.includes("單字聽力測驗")) {
+      const id = unitName.split(" ")[0]; // 例如 "0-1"
+      return `listening/${id}.html`;
+    } else if (unitName.includes("單字聽打測驗")) {
+      const id = unitName.split(" ")[0];
+      return `dictation/${id}.html`;
+    } else if (unitName.includes("單字聽音辨義測驗")) {
+      const id = unitName.split(" ")[0];
+      return `meaning/${id}.html`;
+    }
+    return "#";
+  }
+
+  // 調整順序：聽音辨義 → 聽力 → 聽打
+  const allUnitsGrouped = [];
+  for (let i = 0; i < listeningUnits.length; i++) {
+    allUnitsGrouped.push([meaningUnits[i], listeningUnits[i], dictationUnits[i]]);
+  }
+
+  async function queryScores() {
+    const nickname = document.getElementById("nicknameInput").value.trim();
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = "查詢中，請稍候...";
+    if (!nickname) {
+      resultDiv.innerHTML = '<p style="color:red;">請輸入姓名！</p>';
+      return;
+    }
+    try {
+      const apiUrl = "https://api.sheetbest.com/sheets/6609511a-f588-4e4f-bd2b-ed551cab8770";
+      const res = await fetch(apiUrl);
+      const data = await res.json();
+
+      const userRecords = data.filter(row => row.nickname && row.nickname.toLowerCase() === nickname.toLowerCase());
+
+      const latestScores = {};
+      userRecords.forEach(record => {
+        const unit = record.gametitle || "未分類";
+        const timestamp = new Date(record["時間戳記"]);
+        if (!latestScores[unit] || timestamp > latestScores[unit].timestamp) {
+          latestScores[unit] = {
+            score: Number(record.score),
+            timestamp
+          };
+        }
+      });
+
+      let html = `<h2>${nickname} 的成績概覽</h2>`;
+      html += `<table>
+        <thead>
+          <tr>
+            <th>單字聽音辨義測驗</th>
+            <th>單字聽力測驗</th>
+            <th>單字聽打測驗</th>
+          </tr>
+        </thead>
+        <tbody>
+      `;
+
+      allUnitsGrouped.forEach(rowUnits => {
+        html += "<tr>";
+        rowUnits.forEach(unit => {
+          if (unit.trim() === "") {
+            html += `<td></td>`;
+          } else {
+            const link = getUnitLink(unit);
+            if (latestScores[unit]) {
+              const score = latestScores[unit].score;
+              const pass = score >= 80;
+              html += `<td class="${pass ? 'pass' : 'fail'}"><a href="${link}" target="_blank">${unit}</a><br>${score} 分<br>${pass ? '✅ 合格' : '❌ 不合格'}</td>`;
+            } else {
+              html += `<td class="not-tested"><a href="${link}" target="_blank">${unit}</a><br>尚未測驗</td>`;
+            }
+          }
+        });
+        html += "</tr>";
+      });
+
+      html += `</tbody></table>`;
+      resultDiv.innerHTML = html;
+    } catch (err) {
+      resultDiv.innerHTML = `<p style="color:red;">發生錯誤，請稍後再試。</p>`;
+      console.error(err);
+    }
+  }
+</script>
+這樣效果是：
+
+表格順序：聽音辨義 → 聽力 → 聽打
+
+單元名稱變成可點擊連結（在新分頁開啟）
+
+空白的 0-1 聽音辨義 依然保持空格
+
+尚未測驗的單元，也可以點擊進去測驗頁面
+
+如果你願意告訴我實際的測驗 URL 規則（像是資料夾名稱和檔名），我可以直接幫你套上真正的網址，不用手動改。
+你要我幫你直接合併成完整 HTML 嗎？這樣貼上就能用了。
+
+你說：
+給我完整程式碼
+ChatGPT 說：
+好，我幫你把完整 HTML 整合好，順序已改成「聽音辨義 → 聽力 → 聽打」，並且每個單元名稱都加上對應的超連結（新分頁開啟），空白單元保持空白。
+我先假設你的測驗檔案結構是：
+
+meaning/0-2.html ~ meaning/0-11.html
+listening/0-1.html ~ listening/0-11.html
+dictation/0-1.html ~ dictation/0-11.html
+這是可以直接貼上用的版本：
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>學習成績查詢</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 800px;
+      margin: 30px auto;
+      text-align: center;
+    }
+    #logo {
+      width: 150px;
+      max-width: 80%;
+      margin-bottom: 10px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      width: 80%;
+      max-width: 400px;
+      margin: 10px auto;
+      display: block;
+      text-align: center;
+    }
+    #result {
+      margin-top: 20px;
+      text-align: center;
+    }
+    table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 780px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .pass {
+      color: green;
+      font-weight: bold;
+    }
+    .fail {
+      color: red;
+      font-weight: bold;
+    }
+    .not-tested {
+      color: gray;
+      font-style: italic;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <img src="logo.png" alt="Logo" id="logo" />
+  <h1>學習成績查詢</h1>
+  <input id="nicknameInput" type="text" placeholder="請輸入您的姓名" />
+  <button onclick="queryScores()">查詢成績</button>
+  <div id="result"></div>
+
+  <script>
+    const listeningUnits = [
       "0-1 單字聽力測驗",
       "0-2 單字聽力測驗",
       "0-3 單字聽力測驗",
@@ -204,3 +915,247 @@
   </script>
 </body>
 </html>
+這樣你的表格：
+
+左 → 右：聽音辨義 → 聽力 → 聽打
+
+單元名稱可點擊，會在新分頁打開對應測驗
+
+尚未測驗的單元，也可點擊進入測驗
+
+空白單元（0-1 聽音辨義）保持空白
+
+如果你的測驗網址規則不是這樣（例如檔名不是 0-1.html），我可以再幫你改成符合你的實際檔名。
+你要我幫你做成可以自動從 gametitle 判斷出網址的版本嗎？這樣就不用手動改連結規則了。
+
+你說：
+幫我把測驗全部替換成挑戰
+ChatGPT 說：
+好，我幫你把程式裡所有顯示的「測驗」改成「挑戰」，同時保留你原本的連結規則（只是檔名跟顯示名稱變了）。
+
+完整修改後的版本如下：
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>學習成績查詢</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 800px;
+      margin: 30px auto;
+      text-align: center;
+    }
+    #logo {
+      width: 150px;
+      max-width: 80%;
+      margin-bottom: 10px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      width: 80%;
+      max-width: 400px;
+      margin: 10px auto;
+      display: block;
+      text-align: center;
+    }
+    #result {
+      margin-top: 20px;
+      text-align: center;
+    }
+    table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 780px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .pass {
+      color: green;
+      font-weight: bold;
+    }
+    .fail {
+      color: red;
+      font-weight: bold;
+    }
+    .not-tested {
+      color: gray;
+      font-style: italic;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <img src="logo.png" alt="Logo" id="logo" />
+  <h1>學習成績查詢</h1>
+  <input id="nicknameInput" type="text" placeholder="請輸入您的姓名" />
+  <button onclick="queryScores()">查詢成績</button>
+  <div id="result"></div>
+
+  <script>
+    const listeningUnits = [
+      "0-1 單字聽力挑戰",
+      "0-2 單字聽力挑戰",
+      "0-3 單字聽力挑戰",
+      "0-4 單字聽力挑戰",
+      "0-5 單字聽力挑戰",
+      "0-6 單字聽力挑戰",
+      "0-7 單字聽力挑戰",
+      "0-8 單字聽力挑戰",
+      "0-9 單字聽力挑戰",
+      "0-10 單字聽力挑戰",
+      "0-11 單字聽力挑戰",
+    ];
+
+    const dictationUnits = [
+      "0-1 單字聽打挑戰",
+      "0-2 單字聽打挑戰",
+      "0-3 單字聽打挑戰",
+      "0-4 單字聽打挑戰",
+      "0-5 單字聽打挑戰",
+      "0-6 單字聽打挑戰",
+      "0-7 單字聽打挑戰",
+      "0-8 單字聽打挑戰",
+      "0-9 單字聽打挑戰",
+      "0-10 單字聽打挑戰",
+      "0-11 單字聽打挑戰",
+    ];
+
+    const meaningUnits = [
+      "                 ",  // 空白
+      "0-2 單字聽音辨義挑戰",
+      "0-3 單字聽音辨義挑戰",
+      "0-4 單字聽音辨義挑戰",
+      "0-5 單字聽音辨義挑戰",
+      "0-6 單字聽音辨義挑戰",
+      "0-7 單字聽音辨義挑戰",
+      "0-8 單字聽音辨義挑戰",
+      "0-9 單字聽音辨義挑戰",
+      "0-10 單字聽音辨義挑戰",
+      "0-11 單字聽音辨義挑戰",
+    ];
+
+    function getUnitLink(unitName) {
+      if (unitName.includes("單字聽力挑戰")) {
+        const id = unitName.split(" ")[0];
+        return `listening/${id}.html`;
+      } else if (unitName.includes("單字聽打挑戰")) {
+        const id = unitName.split(" ")[0];
+        return `dictation/${id}.html`;
+      } else if (unitName.includes("單字聽音辨義挑戰")) {
+        const id = unitName.split(" ")[0];
+        return `meaning/${id}.html`;
+      }
+      return "#";
+    }
+
+    const allUnitsGrouped = [];
+    for (let i = 0; i < listeningUnits.length; i++) {
+      allUnitsGrouped.push([meaningUnits[i], listeningUnits[i], dictationUnits[i]]);
+    }
+
+    async function queryScores() {
+      const nickname = document.getElementById("nicknameInput").value.trim();
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "查詢中，請稍候...";
+      if (!nickname) {
+        resultDiv.innerHTML = '<p style="color:red;">請輸入姓名！</p>';
+        return;
+      }
+      try {
+        const apiUrl = "https://api.sheetbest.com/sheets/6609511a-f588-4e4f-bd2b-ed551cab8770";
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+
+        const userRecords = data.filter(row => row.nickname && row.nickname.toLowerCase() === nickname.toLowerCase());
+
+        const latestScores = {};
+        userRecords.forEach(record => {
+          const unit = record.gametitle || "未分類";
+          const timestamp = new Date(record["時間戳記"]);
+          if (!latestScores[unit] || timestamp > latestScores[unit].timestamp) {
+            latestScores[unit] = {
+              score: Number(record.score),
+              timestamp
+            };
+          }
+        });
+
+        let html = `<h2>${nickname} 的成績概覽</h2>`;
+        html += `<table>
+          <thead>
+            <tr>
+              <th>單字聽音辨義挑戰</th>
+              <th>單字聽力挑戰</th>
+              <th>單字聽打挑戰</th>
+            </tr>
+          </thead>
+          <tbody>
+        `;
+
+        allUnitsGrouped.forEach(rowUnits => {
+          html += "<tr>";
+          rowUnits.forEach(unit => {
+            if (unit.trim() === "") {
+              html += `<td></td>`;
+            } else {
+              const link = getUnitLink(unit);
+              if (latestScores[unit]) {
+                const score = latestScores[unit].score;
+                const pass = score >= 80;
+                html += `<td class="${pass ? 'pass' : 'fail'}"><a href="${link}" target="_blank">${unit}</a><br>${score} 分<br>${pass ? '✅ 合格' : '❌ 不合格'}</td>`;
+              } else {
+                html += `<td class="not-tested"><a href="${link}" target="_blank">${unit}</a><br>尚未挑戰</td>`;
+              }
+            }
+          });
+          html += "</tr>";
+        });
+
+        html += `</tbody></table>`;
+        resultDiv.innerHTML = html;
+      } catch (err) {
+        resultDiv.innerHTML = `<p style="color:red;">發生錯誤，請稍後再試。</p>`;
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
+這樣改完之後：
+
+所有標題和單元名稱的「測驗」都變成「挑戰」
+
+空白欄位（例如 0-1 聽音辨義挑戰）依然不顯示內容
+
+尚未挑戰的顯示「尚未挑戰」
+
+點擊單元名稱一樣會開啟對應的挑戰連結
+
+如果你要的話，我還可以幫你把 連結檔名也改成 challenge 版本，例如 listening-challenge/0-1.html，這樣就完全連網址結構都對應「挑戰」。
+你要我順便改網址結構嗎？
+
+
+
+未選擇任何檔案未選擇任何檔案
+ChatGPT 可能會出錯。請查核重要資訊。
+ChatGPT 說：好，我幫你把程式裡所有顯示的「測驗」改成「挑戰」，同時保留你原本的連結規則（只是檔名跟顯示名稱變了）。 完整修改後的版本如下： ```html <!DOCTYPE html> <html lang="zh-TW"> <head> <meta charset="UTF-8" /> <title>學習成績查詢</title> <style> body { font-family: sans-serif; max-width: 800px; margin: 30px auto; text-align: center; } #logo { width: 150px; max-width: 80%; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; } input, button { padding: 10px; font-size: 16px; width: 80%; max-width: 400px; margin: 10px auto; display: block; text-align: center; } #result { margin-top: 20px; text-align: center; } table { margin: 0 auto; border-collapse: collapse; width: 100%; max-width: 780px; } th, td { border: 1px solid #ccc; padding: 8px 10px; text-align: center; vertical-align: middle; } th { background-color: #f2f2f2; } .pass { color: green; font-weight: bold; } .fail { color: red; font-weight: bold; } .not-tested { color: gray; font-style: italic; } a { text-decoration: none; color: inherit; } a:hover { text-decoration: underline; } </style> </head> <body> <img src="logo.png" alt="Logo" id="logo" /> <h1>學習成績查詢</h1> <input id="nicknameInput" type="text" placeholder="請輸入您的姓名" /> <button onclick="queryScores()">查詢成績</button> <div id="result"></div> <script> const listeningUnits = [ "0-1 單字聽力挑戰", "0-2 單字聽力挑戰", "0-3 單字聽力挑戰", "0-4 單字聽力挑戰", "0-5 單字聽力挑戰", "0-6 單字聽力挑戰", "0-7 單字聽力挑戰", "0-8 單字聽力挑戰", "0-9 單字聽力挑戰", "0-10 單字聽力挑戰", "0-11 單字聽力挑戰", ]; const dictationUnits = [ "0-1 單字聽打挑戰", "0-2 單字聽打挑戰", "0-3 單字聽打挑戰", "0-4 單字聽打挑戰", "0-5 單字聽打挑戰", "0-6 單字聽打挑戰", "0-7 單字聽打挑戰", "0-8 單字聽打挑戰", "0-9 單字聽打挑戰", "0-10 單字聽打挑戰", "0-11 單字聽打挑戰", ]; const meaningUnits = [ " ", // 空白 "0-2 單字聽音辨義挑戰", "0-3 單字聽音辨義挑戰", "0-4 單字聽音辨義挑戰", "0-5 單字聽音辨義挑戰", "0-6 單字聽音辨義挑戰", "0-7 單字聽音辨義挑戰", "0-8 單字聽音辨義挑戰", "0-9 單字聽音辨義挑戰", "0-10 單字聽音辨義挑戰", "0-11 單字聽音辨義挑戰", ]; function getUnitLink(unitName) { if (unitName.includes("單字聽力挑戰")) { const id = unitName.split(" ")[0]; return `listening/${id}.html`; } else if (unitName.includes("單字聽打挑戰")) { const id = unitName.split(" ")[0]; return `dictation/${id}.html`; } else if (unitName.includes("單字聽音辨義挑戰")) { const id = unitName.split(" ")[0]; return `meaning/${id}.html`; } return "#"; } const allUnitsGrouped = []; for (let i = 0; i < listeningUnits.length; i++) { allUnitsGrouped.push([meaningUnits[i], listeningUnits[i], dictationUnits[i]]); } async function queryScores() { const nickname = document.getElementById("nicknameInput").value.trim(); const resultDiv = document.getElementById("result"); resultDiv.innerHTML = "查詢中，請稍候..."; if (!nickname) { resultDiv.innerHTML = '<p style="color:red;">請輸入姓名！</p>'; return; } try { const apiUrl = "https://api.sheetbest.com/sheets/6609511a-f588-4e4f-bd2b-ed551cab8770"; const res = await fetch(apiUrl); const data = await res.json(); const userRecords = data.filter(row => row.nickname && row.nickname.toLowerCase() === nickname.toLowerCase()); const latestScores = {}; userRecords.forEach(record => { const unit = record.gametitle || "未分類"; const timestamp = new Date(record["時間戳記"]); if (!latestScores[unit] || timestamp > latestScores[unit].timestamp) { latestScores[unit] = { score: Number(record.score), timestamp }; } }); let html = `<h2>${nickname} 的成績概覽</h2>`; html += `<table> <thead> <tr> <th>單字聽音辨義挑戰</th> <th>單字聽力挑戰</th> <th>單字聽打挑戰</th> </tr> </thead> <tbody> `; allUnitsGrouped.forEach(rowUnits => { html += "<tr>"; rowUnits.forEach(unit => { if (unit.trim() === "") { html += `<td></td>`; } else { const link = getUnitLink(unit); if (latestScores[unit]) { const score = latestScores[unit].score; const pass = score >= 80; html += `<td class="${pass ? 'pass' : 'fail'}"><a href="${link}" target="_blank">${unit}</a><br>${score} 分<br>${pass ? '✅ 合格' : '❌ 不合格'}</td>`; } else { html += `<td class="not-tested"><a href="${link}" target="_blank">${unit}</a><br>尚未挑戰</td>`; } } }); html += "</tr>"; }); html += `</tbody></table>`; resultDiv.innerHTML = html; } catch (err) { resultDiv.innerHTML = `<p style="color:red;">發生錯誤，請稍後再試。</p>`; console.error(err); } } </script> </body> </html> ``` --- 這樣改完之後： - 所有標題和單元名稱的「測驗」都變成「挑戰」 - 空白欄位（例如 0-1 聽音辨義挑戰）依然不顯示內容 - 尚未挑戰的顯示「尚未挑戰」 - 點擊單元名稱一樣會開啟對應的挑戰連結 如果你要的話，我還可以幫你把 **連結檔名也改成 `challenge` 版本**，例如 `listening-challenge/0-1.html`，這樣就完全連網址結構都對應「挑戰」。 你要我順便改網址結構嗎？
