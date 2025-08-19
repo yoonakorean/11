@@ -3,16 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <title>歡迎參加挑戰賽</title>
-
-  <!-- Open Graph Meta -->
   <meta property="og:title" content="歡迎參加挑戰賽">
   <meta property="og:description" content="歡迎參加挑戰賽">
   <meta property="og:image" content="https://yoonakorean.github.io/logo.png">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://yoonakorean.github.io/challenge-home/">
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <style>
     body {
       font-family: sans-serif;
@@ -57,23 +53,27 @@
     th {
       background-color: #f2f2f2;
     }
-    .pass { color: green; font-weight: bold; }
-    .fail { color: red; font-weight: bold; }
-    .not-tested { color: gray; font-style: italic; }
-    .locked { color: gray; font-style: italic; }
-    .locked a {
-      pointer-events: none;
-      cursor: default;
-      text-decoration: none;
+    .not-tested {
       color: gray;
+      font-style: italic;
     }
-    a { text-decoration: none; color: inherit; }
-    a:hover { text-decoration: underline; }
-
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
     @media (max-width: 600px) {
-      input, button { width: 95%; }
-      table, th, td { font-size: 14px; }
-      #logo { width: 120px; }
+      input, button {
+        width: 95%;
+      }
+      table, th, td {
+        font-size: 14px;
+      }
+      #logo {
+        width: 120px;
+      }
     }
   </style>
 </head>
@@ -85,24 +85,15 @@
   <div id="result"></div>
 
   <script>
-    // 句子聽打挑戰列表
-    const dictationUnits = Array.from({ length: 26 }, (_, i) => `${i+1}-1 句子聽打挑戰`);
-    // 句子跟讀挑戰列表
-    const speakingUnits = Array.from({ length: 26 }, (_, i) => `${i+1}-1 句子跟讀挑戰`);
-
-    // 單元連結（先留空，之後可自行補上）
-    const unitLinks = {};
-    dictationUnits.forEach(u => unitLinks[u] = "");
-    speakingUnits.forEach(u => unitLinks[u] = "");
-
-    // 配對成二維陣列 [聽打, 跟讀]
+    // 所有單元名稱及固定網址
     const allUnitsGrouped = [];
-    for (let i = 0; i < dictationUnits.length; i++) {
-      allUnitsGrouped.push([dictationUnits[i], speakingUnits[i]]);
-    }
-
-    function getUnitLink(unitName) {
-      return unitLinks[unitName] || "#";
+    for (let i = 1; i <= 26; i++) {
+      const numStr = i < 10 ? '0' + i : i;
+      const stUnit = `${i}-1 句子聽打挑戰`;
+      const ssUnit = `${i}-1 句子跟讀挑戰`;
+      const stLink = `https://yoonakorean.github.io/11${numStr}01ST/`;
+      const ssLink = `https://yoonakorean.github.io/11${numStr}01SS/`;
+      allUnitsGrouped.push([stUnit, stLink, ssUnit, ssLink]);
     }
 
     function renderInitialTable() {
@@ -115,19 +106,10 @@
           </tr>
         </thead>
         <tbody>`;
-      allUnitsGrouped.forEach((rowUnits, index) => {
+      allUnitsGrouped.forEach(row => {
         html += "<tr>";
-        const dictationUnit = rowUnits[0];
-        const speakingUnit = rowUnits[1];
-
-        // 聽打
-        html += index === 0
-          ? `<td class="not-tested"><a href="${getUnitLink(dictationUnit)}">${dictationUnit}</a><br>尚未挑戰</td>`
-          : `<td class="locked">${dictationUnit}<br>🔒 鎖定</td>`;
-
-        // 跟讀
-        html += `<td class="locked">${speakingUnit}<br>🔒 鎖定</td>`;
-
+        html += `<td class="not-tested"><a href="${row[1]}" target="_blank" rel="noopener">${row[0]}</a><br>尚未挑戰</td>`;
+        html += `<td class="not-tested"><a href="${row[3]}" target="_blank" rel="noopener">${row[2]}</a><br>尚未挑戰</td>`;
         html += "</tr>";
       });
       html += `</tbody></table>`;
@@ -152,7 +134,10 @@
           const unit = record.gametitle || "未分類";
           const timestamp = new Date(record["時間戳記"]);
           if (!latestScores[unit] || timestamp > latestScores[unit].timestamp) {
-            latestScores[unit] = { score: Number(record.score) || 0, timestamp };
+            latestScores[unit] = {
+              score: Number(record.score) || 0,
+              timestamp
+            };
           }
         });
 
@@ -166,41 +151,18 @@
           </thead>
           <tbody>`;
 
-        allUnitsGrouped.forEach((rowUnits, index) => {
+        allUnitsGrouped.forEach(row => {
+          const stUnit = row[0];
+          const stLink = row[1];
+          const ssUnit = row[2];
+          const ssLink = row[3];
+
+          const stScore = latestScores[stUnit]?.score || 0;
+          const ssScore = latestScores[ssUnit]?.score || 0;
+
           html += "<tr>";
-          const dictationUnit = rowUnits[0];
-          const speakingUnit = rowUnits[1];
-
-          // 聽打解鎖邏輯
-          const dictationUnlocked = index === 0 || (latestScores[allUnitsGrouped[index-1][0]]?.score >= 80);
-          if (dictationUnlocked) {
-            const score = latestScores[dictationUnit]?.score;
-            if (score == null) {
-              html += `<td class="not-tested"><a href="${getUnitLink(dictationUnit)}">${dictationUnit}</a><br>尚未挑戰</td>`;
-            } else if (score >= 80) {
-              html += `<td class="pass"><a href="${getUnitLink(dictationUnit)}">${dictationUnit}</a><br>✅ 已完成</td>`;
-            } else {
-              html += `<td class="fail"><a href="${getUnitLink(dictationUnit)}">${dictationUnit}</a><br>❌ 未達標 (${score}分)</td>`;
-            }
-          } else {
-            html += `<td class="locked">${dictationUnit}<br>🔒 鎖定</td>`;
-          }
-
-          // 跟讀解鎖邏輯：必須先完成對應的聽打（>=80分）
-          const speakingUnlocked = latestScores[dictationUnit]?.score >= 80;
-          if (speakingUnlocked) {
-            const score = latestScores[speakingUnit]?.score;
-            if (score == null) {
-              html += `<td class="not-tested"><a href="${getUnitLink(speakingUnit)}">${speakingUnit}</a><br>尚未挑戰</td>`;
-            } else if (score >= 80) {
-              html += `<td class="pass"><a href="${getUnitLink(speakingUnit)}">${speakingUnit}</a><br>✅ 已完成</td>`;
-            } else {
-              html += `<td class="fail"><a href="${getUnitLink(speakingUnit)}">${speakingUnit}</a><br>❌ 未達標 (${score}分)</td>`;
-            }
-          } else {
-            html += `<td class="locked">${speakingUnit}<br>🔒 鎖定</td>`;
-          }
-
+          html += `<td class="${stScore >= 80 ? 'pass' : 'not-tested'}"><a href="${stLink}" target="_blank" rel="noopener">${stUnit}</a><br>${stScore >= 80 ? '✅ 已完成' : '尚未挑戰'}</td>`;
+          html += `<td class="${ssScore >= 80 ? 'pass' : 'not-tested'}"><a href="${ssLink}" target="_blank" rel="noopener">${ssUnit}</a><br>${ssScore >= 80 ? '✅ 已完成' : '尚未挑戰'}</td>`;
           html += "</tr>";
         });
 
