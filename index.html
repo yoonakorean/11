@@ -108,19 +108,21 @@
       html += `<table>
         <thead>
           <tr>
-            <th>句子聽打挑戰</th>
             <th>句子跟讀挑戰</th>
+            <th>句子聽打挑戰</th>
           </tr>
         </thead>
         <tbody>`;
 
       allUnitsGrouped.forEach(row => {
         const unitNumber = row[0].split(' ')[0];
-        if (!visibleUnits.includes(unitNumber)) return; // 不在清單內就跳過
+        if (!visibleUnits.includes(unitNumber)) return;
 
         html += "<tr>";
-        html += `<td class="not-tested"><a href="${row[1]}" target="_blank" rel="noopener">${row[0]}</a><br>尚未挑戰</td>`;
+        // 左邊：跟讀挑戰（只顯示連結）
         html += `<td><a href="${row[3]}" target="_blank" rel="noopener">${row[2]}</a></td>`;
+        // 右邊：聽打挑戰（顯示成績）
+        html += `<td class="not-tested"><a href="${row[1]}" target="_blank" rel="noopener">${row[0]}</a><br>尚未挑戰</td>`;
         html += "</tr>";
       });
 
@@ -157,15 +159,15 @@
         html += `<table>
           <thead>
             <tr>
-              <th>句子聽打挑戰</th>
               <th>句子跟讀挑戰</th>
+              <th>句子聽打挑戰</th>
             </tr>
           </thead>
           <tbody>`;
 
         allUnitsGrouped.forEach(row => {
           const unitNumber = row[0].split(' ')[0];
-          if (!visibleUnits.includes(unitNumber)) return; // 不在清單內就跳過
+          if (!visibleUnits.includes(unitNumber)) return;
 
           const stUnit = row[0];
           const stLink = row[1];
@@ -175,8 +177,8 @@
           const stScore = latestScores[stUnit]?.score || 0;
 
           html += "<tr>";
-          html += `<td class="${stScore >= 80 ? 'pass' : 'not-tested'}"><a href="${stLink}" target="_blank" rel="noopener">${stUnit}</a><br>${stScore >= 80 ? '✅ 已完成' : '尚未挑戰'}</td>`;
           html += `<td><a href="${ssLink}" target="_blank" rel="noopener">${ssUnit}</a></td>`;
+          html += `<td class="${stScore >= 80 ? 'pass' : 'not-tested'}"><a href="${stLink}" target="_blank" rel="noopener">${stUnit}</a><br>${stScore >= 80 ? '✅ 已完成' : '尚未挑戰'}</td>`;
           html += "</tr>";
         });
 
