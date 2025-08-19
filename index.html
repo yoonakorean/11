@@ -100,6 +100,9 @@
       allUnitsGrouped.push([stUnit, stLink, ssUnit, ssLink]);
     }
 
+    // 目前只顯示的單元編號
+    const visibleUnits = ['1-1', '7-1'];
+
     function renderInitialTable() {
       let html = `<h2>單元列表</h2>`;
       html += `<table>
@@ -110,12 +113,17 @@
           </tr>
         </thead>
         <tbody>`;
+
       allUnitsGrouped.forEach(row => {
+        const unitNumber = row[0].split(' ')[0];
+        if (!visibleUnits.includes(unitNumber)) return; // 不在清單內就跳過
+
         html += "<tr>";
         html += `<td class="not-tested"><a href="${row[1]}" target="_blank" rel="noopener">${row[0]}</a><br>尚未挑戰</td>`;
         html += `<td><a href="${row[3]}" target="_blank" rel="noopener">${row[2]}</a></td>`;
         html += "</tr>";
       });
+
       html += `</tbody></table>`;
       document.getElementById("result").innerHTML = html;
     }
@@ -156,6 +164,9 @@
           <tbody>`;
 
         allUnitsGrouped.forEach(row => {
+          const unitNumber = row[0].split(' ')[0];
+          if (!visibleUnits.includes(unitNumber)) return; // 不在清單內就跳過
+
           const stUnit = row[0];
           const stLink = row[1];
           const ssUnit = row[2];
@@ -164,9 +175,7 @@
           const stScore = latestScores[stUnit]?.score || 0;
 
           html += "<tr>";
-          // 聽打挑戰顯示成績
           html += `<td class="${stScore >= 80 ? 'pass' : 'not-tested'}"><a href="${stLink}" target="_blank" rel="noopener">${stUnit}</a><br>${stScore >= 80 ? '✅ 已完成' : '尚未挑戰'}</td>`;
-          // 跟讀挑戰只顯示連結
           html += `<td><a href="${ssLink}" target="_blank" rel="noopener">${ssUnit}</a></td>`;
           html += "</tr>";
         });
