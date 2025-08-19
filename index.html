@@ -53,6 +53,10 @@
     th {
       background-color: #f2f2f2;
     }
+    .pass {
+      color: green;
+      font-weight: bold;
+    }
     .not-tested {
       color: gray;
       font-style: italic;
@@ -109,7 +113,7 @@
       allUnitsGrouped.forEach(row => {
         html += "<tr>";
         html += `<td class="not-tested"><a href="${row[1]}" target="_blank" rel="noopener">${row[0]}</a><br>尚未挑戰</td>`;
-        html += `<td class="not-tested"><a href="${row[3]}" target="_blank" rel="noopener">${row[2]}</a><br>尚未挑戰</td>`;
+        html += `<td><a href="${row[3]}" target="_blank" rel="noopener">${row[2]}</a></td>`;
         html += "</tr>";
       });
       html += `</tbody></table>`;
@@ -158,11 +162,12 @@
           const ssLink = row[3];
 
           const stScore = latestScores[stUnit]?.score || 0;
-          const ssScore = latestScores[ssUnit]?.score || 0;
 
           html += "<tr>";
+          // 聽打挑戰顯示成績
           html += `<td class="${stScore >= 80 ? 'pass' : 'not-tested'}"><a href="${stLink}" target="_blank" rel="noopener">${stUnit}</a><br>${stScore >= 80 ? '✅ 已完成' : '尚未挑戰'}</td>`;
-          html += `<td class="${ssScore >= 80 ? 'pass' : 'not-tested'}"><a href="${ssLink}" target="_blank" rel="noopener">${ssUnit}</a><br>${ssScore >= 80 ? '✅ 已完成' : '尚未挑戰'}</td>`;
+          // 跟讀挑戰只顯示連結
+          html += `<td><a href="${ssLink}" target="_blank" rel="noopener">${ssUnit}</a></td>`;
           html += "</tr>";
         });
 
