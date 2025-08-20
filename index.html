@@ -89,9 +89,9 @@
   <div id="result"></div>
 
   <script>
-    // 建立所有單元：顯示名稱 vs 表單名稱
+    // ✅ 只保留 1-1 與 7-1 單元
     const allUnitsGrouped = [];
-    for (let i = 1; i <= 26; i++) {  // 改成 26
+    [1, 7].forEach(i => {
       const numStr = i < 10 ? '0' + i : i;
 
       // 顯示名稱（給使用者看）
@@ -111,7 +111,7 @@
         stUnit, ssUnit,       // 表單名稱
         stLink, ssLink        // 網址
       });
-    }
+    });
 
     function renderInitialTable() {
       let html = `<h2>單元列表</h2>`;
@@ -148,7 +148,7 @@
 
         const userRecords = data.filter(row => row.nickname && row.nickname.toLowerCase() === nickname.toLowerCase());
 
-      const bestScores = {};
+        const bestScores = {};
         userRecords.forEach(record => {
           const unit = record.gametitle || "未分類";
           const score = Number(record.score) || 0;
