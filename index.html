@@ -162,9 +162,11 @@
         userRecords.forEach(record => {
           const unit = record.gametitle || "未分類";
           const score = Number(record.score) || 0;
+          const seconds = Number(record.time) || 0; // ⚡ 用 time 欄位
           if (!bestScores[unit] || score > bestScores[unit].score) {
             bestScores[unit] = {
               score,
+              seconds,
               timestamp: new Date(record["時間戳記"])
             };
           }
@@ -186,9 +188,24 @@
           const sfScore = bestScores[row.sfUnit]?.score || 0;
           const stScore = bestScores[row.stUnit]?.score || 0;
 
+          const ssSec = bestScores[row.ssUnit]?.seconds || 0;
+          const sfSec = bestScores[row.sfUnit]?.seconds || 0;
+          const stSec = bestScores[row.stUnit]?.seconds || 0;
+
           html += "<tr>";
           // ✅ 跟讀
-          html += `<td><a href="${row.ssLink}" target="_blank" rel="noopener">${row.ssDisplay}</a></td>`;
+          if (ssScore > 0) {
+            html += `<td>
+                       <a href="${row.ssLink}" target="_blank" rel="noopener">${row.ssDisplay}</a><br>
+                       <span class="${ssScore >= 80 ? 'pass' : ''}">
+                         ${ssScore} 分 ${ssSec > 0 ? ssSec + "秒 " : ""}${ssScore >= 80 ? '✅合格' : ''}
+                       </span>
+                     </td>`;
+          } else {
+            html += `<td class="not-tested">
+                       <a href="${row.ssLink}" target="_blank" rel="noopener">${row.ssDisplay}</a><br>尚未挑戰
+                     </td>`;
+          }
           // ✅ 填空
           if (sfScore > 0) {
             html += `<td>
@@ -196,7 +213,7 @@
                          ${row.sfDisplay}
                        </a><br>
                        <span class="${sfScore >= 80 ? 'pass' : ''}">
-                         ${sfScore} 分${sfScore >= 80 ? ' ✅合格' : ''}
+                         ${sfScore} 分 ${sfSec > 0 ? sfSec + "秒 " : ""}${sfScore >= 80 ? '✅合格' : ''}
                        </span>
                      </td>`;
           } else {
@@ -213,7 +230,7 @@
                          ${row.stDisplay}
                        </a><br>
                        <span class="${stScore >= 80 ? 'pass' : ''}">
-                         ${stScore} 分${stScore >= 80 ? ' ✅合格' : ''}
+                         ${stScore} 分 ${stSec > 0 ? stSec + "秒 " : ""}${stScore >= 80 ? '✅合格' : ''}
                        </span>
                      </td>`;
           } else {
