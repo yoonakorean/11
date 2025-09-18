@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<title>歡迎參加挑戰賽</title>
+<meta property="og:title" content="歡迎參加挑戰賽">
+<meta property="og:description" content="歡迎參加挑戰賽">
+<meta property="og:image" content="https://yoonakorean.github.io/logo.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yoonakorean.github.io/challenge-home/">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+  body {
+    font-family: sans-serif;
+    max-width: 800px;
+    margin: 30px auto;
+    text-align: center;
+    padding: 0 10px;
+  }
+  #logo {
+    width: 150px;
+    max-width: 80%;
+    margin-bottom: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  input, button {
+    padding: 10px;
+    font-size: 16px;
+    width: 80%;
+    max-width: 400px;
+    margin: 10px auto;
+    display: block;
+    text-align: center;
+  }
+  #leaderboard, #result {
+    margin-top: 20px;
+    text-align: center;
+  }
+  table {
+    margin: 0 auto;
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 780px;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px 10px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  th { background-color: #f2f2f2; }
+  .pass { color: green; font-weight: bold; }
+  .not-tested { color: gray; font-style: italic; }
+  .locked { color: gray; font-style: italic; pointer-events: none; cursor: default; }
+  a { text-decoration: none; color: inherit; }
+  a:hover { text-decoration: underline; }
+  .gold { background-color: #fff7c2; }
+  .silver { background-color: #ffffff; }
+  .bronze { background-color: #ffffff; }
+  .self-row { background-color: #cce5ff; }
+  td.medal { font-size: 32px; }
+  @media (max-width: 600px) {
+    input, button { width: 95%; }
+    table, th, td { font-size: 14px; }
+    #logo { width: 120px; }
+    td.medal { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+  <img src="logo.png" alt="Logo" id="logo" />
+  <h1>歡迎參加挑戰賽</h1>
+  <input id="nicknameInput" type="text" placeholder="請輸入您的姓名" />
+  <button onclick="queryScores()">查詢成績</button>
+
+  <!-- 排行榜 -->
+  <div id="leaderboard"></div>
+
+  <!-- 單元表 + 查詢結果 -->
+  <div id="result"></div>
+
+<script>
+// -------- 單元列表設定 --------
+const allUnitsGrouped = [];
+[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].forEach(i => { 
+  const numStr = i < 10 ? '0' + i : i;
+  const ssDisplay = `${i}-1 句子跟讀挑戰`;
+  const sfDisplay = `${i}-1 句子填空挑戰`;
+  const stDisplay = `${i}-1 句子聽打挑戰`;
+  const ssUnit = `11-${i}-1 句子跟讀挑戰`;
+  const sfUnit = `11-${i}-1 句子填空挑戰`;
+  const stUnit = `11-${i}-1 句子聽打挑戰`;
+  const ssLink = `https://yoonakorean.github.io/11${numStr}01SS/`;
+  const sfLink = `https://yoonakorean.github.io/11${numStr}01SF/`;
+  const stLink = `https://yoonakorean.github.io/11${numStr}01ST/`;
+  allUnitsGrouped.push({ ssDisplay, sfDisplay, stDisplay, ssUnit, sfUnit, stUnit, ssLink, sfLink, stLink });
+});
+
+// 初始單元表
+function renderInitialTable() {
+  let html = `<h2>單元列表</h2><table><thead><tr>
+    <th>句子跟讀挑戰</th><th>句子填空挑戰</th><th>句子聽打挑戰</th>
+  </tr></thead><tbody>`;
+  allUnitsGrouped.forEach(row => {
+    html += "<tr>";
+    html += `<td><a href="${row.ssLink}" target="_blank">${row.ssDisplay}</a></td>`;
+    html += `<td class="not-tested"><a href="${row.sfLink}" target="_blank" style="color:black;">${row.sfDisplay}</a><br>尚未挑戰</td>`;
+    html += `<td class="locked">${row.stDisplay}<br>需先完成填空挑戰</td>`;
+    html += "</tr>";
+  });
+  html += "</tbody></table>";
+  document.getElementById("result").innerHTML = html;
+}
+
+// -------- 排行榜功能 --------
+function maskName(name){
+  if(!name) return "";
+  if(name.length<2) return name;
+  return name[0]+"O"+name.slice(2);
+}
+function parseTime(timeStr){ 
+  if(!timeStr) return 0; 
+  const match = timeStr.match(/(\d+)/);
+  return match?Number(match[1]):0;
+}
+function formatTime(seconds){
+  const m = Math.floor(seconds/60);
+  const s = seconds%60;
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+function renderLeaderboard(leaderboard, userData=null, userIndex=-1){
+  let html=`<h2>排行榜前三名</h2><table><thead><tr>
+    <th>名次</th><th>姓名</th><th>通關數</th><th>總分</th><th>平均時間</th>
+  </tr></thead><tbody>`;
+  const medals=["🥇","🥈","🥉"];
+  const medalClasses=["gold","silver","bronze"];
+  leaderboard.slice(0,3).forEach((u,i)=>{
+    const displayName = userData && u.name===userData.name ? u.name : maskName(u.name);
+    html+=`<tr class="${medalClasses[i]}"><td class="medal">${medals[i]}</td><td>${displayName}</td><td>${u.passCount}</td><td>${u.totalScore}</td><td>${formatTime(Math.round(u.avgTime))}</td></tr>`;
+  });
+  if(userData){
+    html+=`<tr class="self-row"><td class="medal">${userIndex+1}</td><td>${userData.name}</td><td>${userData.passCount}</td><td>${userData.totalScore}</td><td>${formatTime(Math.round(userData.avgTime))}</td></tr>`;
+  }else{
+    html+=`<tr class="self-row"><td colspan="5">（此處顯示查詢使用者成績）</td></tr>`;
+  }
+  html+="</tbody></table>";
+  document.getElementById("leaderboard").innerHTML = html;
+}
+async function loadLeaderboard(nickname=""){
+  const resultDiv = document.getElementById("result");
+  try{
+    const apiUrl="https://api.sheetbest.com/sheets/6609511a-f588-4e4f-bd2b-ed551cab8770";
+    const res = await fetch(apiUrl);
+    const data = await res.json();
+    const unitPattern = /^11-\d+-1/; 
+    const userBest={};
+    data.forEach(r=>{
+      if(!r.nickname) return;
+      const unit=(r.gametitle||"").trim();
+      if(!/^11-\d+-1/.test(unit)) return;
+      let score = Number(r.score);
+      let time = parseTime(r.time);
+      if(isNaN(score)) score=0;
+      if(!userBest[r.nickname]) userBest[r.nickname]={};
+      if(!userBest[r.nickname][unit] || score>userBest[r.nickname][unit].score){
+        userBest[r.nickname][unit]={score,time};
+      }
+    });
+    const leaderboard=Object.entries(userBest).map(([name,units])=>{
+      const passed=Object.values(units).filter(u=>u.score>=80);
+      const passCount=passed.length;
+      const totalScore=passed.reduce((a,b)=>a+b.score,0);
+      const totalTime=Object.values(units).reduce((a,b)=>a+b.time,0);
+      const challengeCount=Object.keys(units).length;
+      const avgTime=challengeCount?totalTime/challengeCount:0;
+      return {name,passCount,totalScore,avgTime,units};
+    });
+    leaderboard.sort((a,b)=>{
+      if(b.passCount!==a.passCount) return b.passCount-a.passCount;
+      if(b.totalScore!==a.totalScore) return b.totalScore-a.totalScore;
+      return a.avgTime-b.avgTime;
+    });
+    let userData=null, userIndex=-1;
+    if(nickname){
+      userIndex=leaderboard.findIndex(u=>u.name.toLowerCase()===nickname.toLowerCase());
+      userData=userIndex>=0?leaderboard[userIndex]:null;
+    }
+    renderLeaderboard(leaderboard,userData,userIndex);
+    renderUserScores(userData);
+  }catch(err){
+    console.error(err);
+    resultDiv.innerHTML = `<p style="color:red;">發生錯誤，請稍後再試。</p>`;
+  }
+}
+
+// -------- 使用者查詢與單元狀態 --------
+function renderUserScores(userData){
+  let html = `<h2>單元列表</h2><table><thead><tr>
+    <th>句子跟讀挑戰</th><th>句子填空挑戰</th><th>句子聽打挑戰</th>
+  </tr></thead><tbody>`;
+  allUnitsGrouped.forEach(row => {
+    const ssScore = userData?.units[row.ssUnit]?.score || 0;
+    const sfScore = userData?.units[row.sfUnit]?.score || 0;
+    const stScore = userData?.units[row.stUnit]?.score || 0;
+    html += "<tr>";
+    // 跟讀
+    html += `<td><a href="${row.ssLink}" target="_blank">${row.ssDisplay}</a></td>`;
+    // 填空
+    if(sfScore>0){
+      html += `<td><a href="${row.sfLink}" target="_blank" style="color:black;">${row.sfDisplay}</a><br>
+               <span class="${sfScore>=80?'pass':''}">${sfScore} 分${sfScore>=80?' ✅合格':''}</span></td>`;
+    }else{
+      html += `<td class="not-tested"><a href="${row.sfLink}" target="_blank" style="color:black;">${row.sfDisplay}</a><br>尚未挑戰</td>`;
+    }
+    // 聽打
+    if(sfScore<=0){
+      html += `<td class="locked">${row.stDisplay}<br>需先完成填空挑戰</td>`;
+    }else{
+      if(stScore>0){
+        html += `<td><a href="${row.stLink}" target="_blank" style="color:black;">${row.stDisplay}</a><br>
+                 <span class="${stScore>=80?'pass':''}">${stScore} 分${stScore>=80?' ✅合格':''}</span></td>`;
+      }else{
+        html += `<td class="not-tested"><a href="${row.stLink}" target="_blank" style="color:black;">${row.stDisplay}</a><br>尚未挑戰</td>`;
+      }
+    }
+    html += "</tr>";
+  });
+  html += "</tbody></table>";
+  document.getElementById("result").innerHTML = html;
+}
+
+// 查詢使用者
+function queryScores(){
+  const nickname = document.getElementById("nicknameInput").value.trim();
+  if(!nickname) return;
+  loadLeaderboard(nickname);
+}
+
+// 初始頁面
+renderInitialTable();
+loadLeaderboard();
+</script>
+</body>
+</html>
