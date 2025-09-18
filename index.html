@@ -159,7 +159,7 @@ async function loadLeaderboard(nickname=""){
     data.forEach(r=>{
       if(!r.nickname) return;
       const unit=(r.gametitle||"").trim();
-      if(!unitPattern.test(unit)) return;
+      if(!/^11-\d+-1/.test(unit)) return;
       let score = Number(r.score);
       let time = parseTime(r.time);
       if(isNaN(score)) score=0;
