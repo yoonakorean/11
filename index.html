@@ -154,7 +154,7 @@ async function loadLeaderboard(nickname=""){
     const apiUrl="https://api.sheetbest.com/sheets/6609511a-f588-4e4f-bd2b-ed551cab8770";
     const res = await fetch(apiUrl);
     const data = await res.json();
-    const unitPattern = /^0-(1[0-1]|[1-9])/; 
+    const unitPattern = /^11-\d+-1/; 
     const userBest={};
     data.forEach(r=>{
       if(!r.nickname) return;
